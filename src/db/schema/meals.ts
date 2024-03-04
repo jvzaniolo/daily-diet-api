@@ -6,7 +6,7 @@ export let meals = sqliteTable('meals', {
   name: text('name').notNull(),
   description: text('description').notNull(),
   isOnDiet: integer('is_on_diet', { mode: 'boolean' }).notNull(),
-  date: integer('date', { mode: 'timestamp' }),
+  date: integer('date', { mode: 'timestamp_ms' }),
   userId: integer('user_id')
     .references(() => users.id, {
       onDelete: 'cascade',

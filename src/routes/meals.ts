@@ -1,7 +1,7 @@
 import express from 'express'
 import { and, eq } from 'drizzle-orm'
 import { db } from '~/db/connection'
-import { meals } from '~/db/schema/meals'
+import { meals } from '~/db/schema'
 
 let mealsRouter = express.Router()
 
