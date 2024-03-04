@@ -1,7 +1,7 @@
 {
   "version": "5",
   "dialect": "sqlite",
-  "id": "96a2fbd2-445a-4f6e-b526-a9909d5c13bb",
+  "id": "cc131efa-153c-4423-914f-e38a567b836d",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "meals": {
@@ -39,7 +39,7 @@
           "name": "date",
           "type": "integer",
           "primaryKey": false,
-          "notNull": false,
+          "notNull": true,
           "autoincrement": false
         },
         "user_id": {

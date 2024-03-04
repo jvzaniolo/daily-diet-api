@@ -3,7 +3,7 @@ CREATE TABLE `meals` (
 	`name` text NOT NULL,
 	`description` text NOT NULL,
 	`is_on_diet` integer NOT NULL,
-	`date` integer,
+	`date` integer NOT NULL,
 	`user_id` integer NOT NULL,
 	FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON UPDATE no action ON DELETE cascade
 );
