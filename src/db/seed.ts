@@ -51,6 +51,7 @@ async function seed() {
         userId: 2,
       },
     ])
+    console.log('Database seeded')
   } catch (error) {
     console.log(error)
   }
