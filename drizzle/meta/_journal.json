@@ -1,12 +1,12 @@
 {
   "version": "5",
-  "dialect": "pg",
+  "dialect": "sqlite",
   "entries": [
     {
       "idx": 0,
       "version": "5",
-      "when": 1709565679776,
-      "tag": "0000_secret_shadowcat",
+      "when": 1709570432621,
+      "tag": "0000_outstanding_wonder_man",
       "breakpoints": true
     }
   ]
