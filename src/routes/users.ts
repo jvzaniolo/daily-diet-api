@@ -1,4 +1,5 @@
 import express from 'express'
+import { z } from 'zod'
 import { eq } from 'drizzle-orm'
 import { db } from '~/db/connection'
 import { users, meals } from '~/db/schema'
@@ -11,55 +12,80 @@ usersRouter.get('/users', async (_, res) => {
 })
 
 usersRouter.post('/users', async (req, res) => {
-  let { email } = req.body
-  let [user] = await db
-    .insert(users)
-    .values({
-      email,
+  let userSchema = z.object({
+    email: z.string().email(),
+  })
+
+  try {
+    let { email } = userSchema.parse(req.body)
+    let [user] = await db.insert(users).values({ email }).returning()
+
+    res.cookie('userId', user.id, {
+      maxAge: 1000 * 60 * 60 * 24 * 7, // 1 week in milliseconds
     })
-    .returning()
 
-  res.cookie('userId', user.id)
+    return res.status(201).json({ user })
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      let flatten = error.flatten()
+      return res.status(400).json({ error: flatten.fieldErrors })
+    }
 
-  return res.status(201).json({ user })
+    return res.status(500).json({ error })
+  }
 })
 
 usersRouter.get('/users/metrics', async (req, res) => {
-  let { userId } = req.cookies
+  let cookieSchema = z.object({
+    userId: z.coerce.number(),
+  })
 
-  let userMeals = await db
-    .select({ isOnDiet: meals.isOnDiet })
-    .from(meals)
-    .where(eq(meals.userId, Number(userId)))
+  try {
+    let { userId } = cookieSchema.parse(req.cookies)
 
-  let userMealsOnDiet = userMeals.filter(({ isOnDiet }) => Boolean(isOnDiet))
+    let userMeals = await db
+      .select({ isOnDiet: meals.isOnDiet })
+      .from(meals)
+      .where(eq(meals.userId, userId))
 
-  function findBestSequence(arr: typeof userMeals) {
-    let currentSequence = 0
-    let maxSequence = 0
+    if (!userMeals.length) throw `There are no meals for user ${userId}`
 
-    for (let i = 0; i < arr.length; i++) {
-      if (arr[i].isOnDiet === true) {
-        currentSequence++
-        if (currentSequence > maxSequence) {
-          maxSequence = currentSequence
+    let userMealsOnDiet = userMeals.filter(({ isOnDiet }) => Boolean(isOnDiet))
+
+    function findBestSequence(arr: typeof userMeals) {
+      let currentSequence = 0
+      let maxSequence = 0
+
+      for (let i = 0; i < arr.length; i++) {
+        if (arr[i].isOnDiet === true) {
+          currentSequence++
+          if (currentSequence > maxSequence) {
+            maxSequence = currentSequence
+          }
+        } else {
+          currentSequence = 0
         }
-      } else {
-        currentSequence = 0
       }
+
+      return maxSequence
     }
 
-    return maxSequence
-  }
+    let metrics = {
+      totalMeals: userMeals.length,
+      totalMealsOnDiet: userMealsOnDiet.length,
+      totalMealsOffDiet: userMeals.length - userMealsOnDiet.length,
+      bestSequenceMealsOnDiet: findBestSequence(userMeals),
+    }
 
-  let metrics = {
-    totalMeals: userMeals.length,
-    totalMealsOnDiet: userMealsOnDiet.length,
-    totalMealsOffDiet: userMeals.length - userMealsOnDiet.length,
-    bestSequenceMealsOnDiet: findBestSequence(userMeals),
-  }
+    return res.status(200).json({ metrics })
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      let flatten = error.flatten()
+      return res.status(400).json({ error: flatten.fieldErrors })
+    }
 
-  return res.status(200).json({ metrics })
+    return res.status(500).json({ error })
+  }
 })
 
 export { usersRouter }

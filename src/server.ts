@@ -9,9 +9,8 @@ let app = express()
 app.use(express.json())
 app.use(cookieParser())
 
-app.use(usersRouter)
-app.use(mealsRouter)
+app.use([usersRouter, mealsRouter])
 
 app.listen(3333, () => {
-  console.log('Server is listening on port 3333')
+  console.log('🚀 Server is listening on port 3333')
 })
